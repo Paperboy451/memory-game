@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lieblingsgetränke Memory</title>
+<style>
+  body {
+    font-family: 'Comic Sans MS', cursive, sans-serif;
+    background: #ffd27f; /* feste Farbe */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+  header {
+    text-align: center;
+    padding: 10px;
+    color: #333;
+  }
+  .scoreboard {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    font-size: 1.2rem;
+    margin-bottom: 10px;
+  }
+  .player {
+    padding: 4px 10px;
+    border-radius: 8px;
+    transition: all 0.3s;
+  }
+  .active {
+    background: #ff6f61;
+    color: #fff;
+    transform: scale(1.1);
+  }
+  .game-board {
+    display: grid;
+    gap: 15px;
+    max-width: 95vw;
+  }
+
+  .card {
+    perspective: 1000px;
+    aspect-ratio: 1 / 1;
+    position: relative;
+  }
+  .card-inner {
+    position: absolute;
+    top: 0; left: 0; right: 0; bottom: 0; 
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transition: transform 0.6s;
+    border-radius: 12px;
+    box-sizing: border-box; 
+  }
+  .card.flipped .card-inner {
+    transform: rotateY(180deg);
+  }
+  .card-front, .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    padding: 0;
+    margin: 0; 
+    box-sizing: border-box;
+    backface-visibility: hidden;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.5rem;
+    border: 3px solid #333;
+  }
+  .card-front {
+    background: #fff3c4;
+    color: #333;
+    overflow: hidden;
+  }
+  .card-front img {
+    display: block;
+    width: 100%; 
+    height: 100%;
+    object-fit: cover;
+    border-radius: 8px;
+    border: none; 
+  }
+  .card-back {
+    background: #ff6f61;
+    transform: rotateY(180deg);
+    overflow: hidden;
+  }
+  .card-back img {
+    display: block;
+    width: 100%;  
+    height: 100%; 
+    object-fit: cover; 
+    border-radius: 8px;
+    border: none;
+  }
+  @keyframes matchPulse {
+  0%   { transform: rotateY(180deg) scale(1); box-shadow: 0 0 0px 0 rgba(0,255,128,0); }
+  40%  { transform: rotateY(180deg) scale(1.15); box-shadow: 0 0 25px 10px rgba(0,255,128,0.8); }
+  100% { transform: rotateY(180deg) scale(1); box-shadow: 0 0 0px 0 rgba(0,255,128,0); }
+}
+
+.card.matched .card-inner {
+  animation: matchPulse 0.7s ease;
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Unser ❤️ Memory</h1>
+  <div class="scoreboard">
+    <div id="player1" class="player">👩 Antje: <span id="score1">0</span></div>
+    <div id="player2" class="player">👨 Wolfgang: <span id="score2">0</span></div>
+  </div>
+</header>
+
+<div id="gameBoard" class="game-board"></div>
+
+<script>
+  // === Einstellungen ===
+  const flipDelay = 2000; // Zeit in ms, wie lange Karten sichtbar bleiben
+
+  let gridRows, gridCols;
+  function calcGrid() {
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    // Bestimme Anzahl Spalten basierend auf Breite
+    let cols;
+    if (width < 480) cols = 4;
+    else if (width < 768) cols = 5;
+    else cols = 6;
+
+    // Bestimme Anzahl Reihen basierend auf Höhe
+    let rows;
+    if (height < 500) rows = 4;
+    else if (height < 800) rows = 6;
+    else rows = 8;
+
+console.log("cols:", cols);
+console.log("rows:", rows);
+
+    gridCols = cols;
+    gridRows = rows;
+  }
+  calcGrid();
+
+  function resizeCards() {
+    const board = document.getElementById('gameBoard');
+    const gap = 15;
+    const minCardSize = 70;
+
+    const availableWidth = window.innerWidth - 20;
+    const availableHeight = window.innerHeight - board.getBoundingClientRect().top - 40;
+
+    const cardWidth = (availableWidth - (gridCols - 1) * gap) / gridCols;
+    const cardHeight = (availableHeight - (gridRows - 1) * gap) / gridRows;
+    const cardSize = Math.max(minCardSize, Math.min(cardWidth, cardHeight));
+
+    console.log("cardWidth:", cardWidth);
+    console.log("cardHeight:", cardHeight);
+    console.log("card size:", cardSize);
+    gameBoard.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
+    gameBoard.style.gridTemplateRows = `repeat(${gridRows}, ${cardSize}px)`;
+
+  }
+  window.addEventListener('resize', resizeCards);
+
+  const totalPairs = () => 2; //(gridRows * gridCols) / 2;
+
+  // === Getränke-Daten ===
+  const drinksData = [
+//   { letter: 'A', imgs: ['https://via.placeholder.com/150/FFCC00/000000?text=Aperol','https://via.placeholder.com/150/FFCC00/000000?text=Apfelsaft']},
+//   { letter: 'B', imgs: ['https://via.placeholder.com/150/00CCFF/000000?text=Bier','https://via.placeholder.com/150/00CCFF/000000?text=Baileys']},
+//   { letter: 'C', imgs: ['https://via.placeholder.com/150/FF9999/000000?text=Cocktail','https://via.placeholder.com/150/FF9999/000000?text=Chai+Latte']},
+//   { letter: 'D', imgs: ['https://via.placeholder.com/150/66CC66/000000?text=Daiquiri','https://via.placeholder.com/150/66CC66/000000?text=Doppelbock']},
+  { letter: 'E', imgs: ['https://via.placeholder.com/150/FF9966/000000?text=Espresso','https://via.placeholder.com/150/FF9966/000000?text=Eistee']},
+  { letter: 'F', imgs: ['images/feuerzangenbowle.png']},
+//   { letter: 'G', imgs: ['https://via.placeholder.com/150/FFCC99/000000?text=Gin+Tonic','https://via.placeholder.com/150/FFCC99/000000?text=Grapefruitlimo']},
+//   { letter: 'H', imgs: ['https://via.placeholder.com/150/CCCCFF/000000?text=Hugo','https://via.placeholder.com/150/CCCCFF/000000?text=Heißer+Kakao']},
+//   { letter: 'I', imgs: ['https://via.placeholder.com/150/FFB6C1/000000?text=Iced+Tea','https://via.placeholder.com/150/FFB6C1/000000?text=Irish+Coffee']},
+//   { letter: 'J', imgs: ['https://via.placeholder.com/150/FFDAB9/000000?text=Jägermeister','https://via.placeholder.com/150/FFDAB9/000000?text=Johannisbeersaft']},
+//   { letter: 'K', imgs: ['https://via.placeholder.com/150/FFE4B5/000000?text=Kaffee','https://via.placeholder.com/150/FFE4B5/000000?text=Kombucha']},
+//   { letter: 'L', imgs: ['https://via.placeholder.com/150/AFEEEE/000000?text=Limonade','https://via.placeholder.com/150/AFEEEE/000000?text=Latte+Macchiato']},
+//   { letter: 'M', imgs: ['https://via.placeholder.com/150/98FB98/000000?text=Mojito','https://via.placeholder.com/150/98FB98/000000?text=Milchshake']},
+//   { letter: 'N', imgs: ['https://via.placeholder.com/150/FFDEAD/000000?text=Nektar','https://via.placeholder.com/150/FFDEAD/000000?text=Nescafé']},
+//   { letter: 'O', imgs: ['https://via.placeholder.com/150/FFD700/000000?text=Orangensaft','https://via.placeholder.com/150/FFD700/000000?text=Oolong+Tee']},
+//   { letter: 'P', imgs: ['https://via.placeholder.com/150/FF7F50/000000?text=Pina+Colada','https://via.placeholder.com/150/FF7F50/000000?text=Pfefferminztee']},
+//   { letter: 'Q', imgs: ['https://via.placeholder.com/150/EEE8AA/000000?text=Quittensaft','https://via.placeholder.com/150/EEE8AA/000000?text=Quarantini']},
+//   { letter: 'R', imgs: ['https://via.placeholder.com/150/CD5C5C/000000?text=Rum','https://via.placeholder.com/150/CD5C5C/000000?text=Rhabarberschorle']},
+//   { letter: 'S', imgs: ['https://via.placeholder.com/150/87CEFA/000000?text=Smoothie','https://via.placeholder.com/150/87CEFA/000000?text=Sangria']},
+//   { letter: 'T', imgs: ['https://via.placeholder.com/150/90EE90/000000?text=Tee','https://via.placeholder.com/150/90EE90/000000?text=Tomatensaft']},
+//   { letter: 'U', imgs: ['https://via.placeholder.com/150/DAA520/000000?text=Umeshu','https://via.placeholder.com/150/DAA520/000000?text=Uva+Saft']},
+//   { letter: 'V', imgs: ['https://via.placeholder.com/150/BA55D3/000000?text=Vodka+Lemon','https://via.placeholder.com/150/BA55D3/000000?text=Vanillemilch']},
+//   { letter: 'W', imgs: ['https://via.placeholder.com/150/40E0D0/000000?text=Wein','https://via.placeholder.com/150/40E0D0/000000?text=Whiskey+Sour']},
+//   { letter: 'X', imgs: ['https://via.placeholder.com/150/FF4500/000000?text=X+Mas+Punch','https://via.placeholder.com/150/FF4500/000000?text=Xanthan+Drink']},
+//   { letter: 'Y', imgs: ['https://via.placeholder.com/150/9ACD32/000000?text=Yerba+Mate','https://via.placeholder.com/150/9ACD32/000000?text=Yoghurt+Drink']},
+//   { letter: 'Z', imgs: ['https://via.placeholder.com/150/FF69B4/000000?text=Zitronenlimonade','https://via.placeholder.com/150/FF69B4/000000?text=Zimtpunsch']}
+];
+
+  let currentPlayer;
+  let score1 = 0, score2 = 0;
+  let flippedCards = [];
+  let matchedCount = 0;
+
+  function initGame() {
+    score1 = 0; score2 = 0; matchedCount = 0;
+    document.getElementById('score1').textContent = score1;
+    document.getElementById('score2').textContent = score2;
+
+    // Startspieler zufällig bestimmen
+    currentPlayer = Math.random() < 0.5 ? 1 : 2;
+    updateActivePlayer();
+
+    const selectedLetters = shuffleArray(drinksData).slice(0, totalPairs());
+    console.log("selectedLetters:", selectedLetters);
+    const cardSet = [];
+
+    selectedLetters.forEach(drink => {
+      const randomImg = drink.imgs[Math.floor(Math.random() * drink.imgs.length)];
+      cardSet.push({ type: 'letter', content: drink.letter, matchKey: drink.letter });
+      cardSet.push({ type: 'image', content: randomImg, matchKey: drink.letter });
+    });
+
+    const shuffledCards = shuffleArray(cardSet);
+    const gameBoard = document.getElementById('gameBoard');
+    
+    gameBoard.innerHTML = '';
+    shuffledCards.forEach((card, index) => {
+      const cardEl = document.createElement('div');
+      cardEl.classList.add('card');
+      cardEl.dataset.type = card.type;
+      cardEl.dataset.matchKey = card.matchKey;
+      cardEl.dataset.index = index;
+
+      const cardInner = document.createElement('div');
+      cardInner.classList.add('card-inner');
+
+      const cardFront = document.createElement('div');
+      cardFront.classList.add('card-front');
+      const cardFrontImg = document.createElement('img');
+      cardFrontImg.src = 'images/background.png';
+      cardFrontImg.alt = '?';
+      cardFront.appendChild(cardFrontImg);
+
+      const cardBack = document.createElement('div');
+      cardBack.classList.add('card-back');
+      if (card.type === 'letter') {
+        cardBack.textContent = card.content;
+      } else {
+        const cardBackImg = document.createElement('img');
+        cardBackImg.src = card.content;
+        cardBack.appendChild(cardBackImg);
+      }
+
+      cardInner.appendChild(cardFront);
+      cardInner.appendChild(cardBack);
+      cardEl.appendChild(cardInner);
+
+      cardEl.addEventListener('click', () => flipCard(cardEl));
+      gameBoard.appendChild(cardEl);
+    });
+    resizeCards();
+  }
+
+  function flipCard(cardEl) {
+    if (cardEl.classList.contains('flipped') || cardEl.classList.contains('matched') || flippedCards.length === 2) {
+      return;
+    }
+    cardEl.classList.add('flipped');
+    flippedCards.push(cardEl);
+
+    if (flippedCards.length === 2) {
+      checkMatch();
+    }
+  }
+
+  function checkMatch() {
+    const [first, second] = flippedCards;
+    if (first.dataset.matchKey === second.dataset.matchKey && first.dataset.type !== second.dataset.type) {
+      setTimeout(() => {
+        first.classList.add('matched');
+        second.classList.add('matched');
+        matchedCount++;
+        if (currentPlayer === 1) {
+            score1++;
+            document.getElementById('score1').textContent = score1;
+        } else {
+            score2++;
+            document.getElementById('score2').textContent = score2;
+        }
+        flippedCards = [];
+        if (matchedCount === totalPairs()) {
+            setTimeout(endGame, 500);
+        }
+      }, 700); // 0.7s pulse effekt
+    }
+    else {
+        setTimeout(() => {
+            first.classList.remove('flipped');
+            second.classList.remove('flipped');
+            flippedCards = [];
+            currentPlayer = currentPlayer === 1 ? 2 : 1;
+            updateActivePlayer();
+        }, flipDelay);
+    }
+  }
+
+  function updateActivePlayer() {
+    document.getElementById("player1").classList.toggle("active", currentPlayer === 1);
+    document.getElementById("player2").classList.toggle("active", currentPlayer === 2);
+  }
+
+  function endGame() {
+    let winner = '';
+    if (score1 > score2) winner = 'Antje gewinnt!';
+    else if (score2 > score1) winner = 'Wolfgang gewinnt!';
+    else winner = 'Unentschieden!';
+    alert(`Spiel beendet!\n${winner}`);
+    initGame();
+  }
+
+  function shuffleArray(array) {
+    return array.sort(() => Math.random() - 0.5);
+  }
+
+  initGame();
+</script>
+</body>
+</html>

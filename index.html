@@ -38,6 +38,7 @@
   }
   .game-board {
     display: grid;
+    justify-content: center;
     gap: 15px;
     max-width: 95vw;
   }
@@ -118,8 +119,8 @@
 <header>
   <h1>Unser ❤️ Memory</h1>
   <div class="scoreboard">
-    <div id="player1" class="player">👩 Antje: <span id="score1">0</span></div>
-    <div id="player2" class="player">👨 Wolfgang: <span id="score2">0</span></div>
+    <div id="player1" class="player"><span id="score1">0</span></div>
+    <div id="player2" class="player"><span id="score2">0</span></div>
   </div>
 </header>
 
@@ -127,8 +128,10 @@
 
 <script>
   // === Einstellungen ===
-  const flipDelay = 2000; // Zeit in ms, wie lange Karten sichtbar bleiben
-
+  const flipDelay = 3000; // Zeit in ms, wie lange Karten sichtbar bleiben
+  const player1 = "Antje"; // Hier den Namen des ersten Spielers eintragen
+  const player2 = "Wolfgang";
+  
   let gridRows, gridCols;
   function calcGrid() {
     const width = window.innerWidth;
@@ -178,33 +181,26 @@ console.log("rows:", rows);
   const totalPairs = () => 2; //(gridRows * gridCols) / 2;
 
   // === Getränke-Daten ===
-  const drinksData = [
-//   { letter: 'A', imgs: ['https://via.placeholder.com/150/FFCC00/000000?text=Aperol','https://via.placeholder.com/150/FFCC00/000000?text=Apfelsaft']},
-//   { letter: 'B', imgs: ['https://via.placeholder.com/150/00CCFF/000000?text=Bier','https://via.placeholder.com/150/00CCFF/000000?text=Baileys']},
-//   { letter: 'C', imgs: ['https://via.placeholder.com/150/FF9999/000000?text=Cocktail','https://via.placeholder.com/150/FF9999/000000?text=Chai+Latte']},
-//   { letter: 'D', imgs: ['https://via.placeholder.com/150/66CC66/000000?text=Daiquiri','https://via.placeholder.com/150/66CC66/000000?text=Doppelbock']},
-  { letter: 'E', imgs: ['https://via.placeholder.com/150/FF9966/000000?text=Espresso','https://via.placeholder.com/150/FF9966/000000?text=Eistee']},
-  { letter: 'F', imgs: ['images/feuerzangenbowle.png']},
-//   { letter: 'G', imgs: ['https://via.placeholder.com/150/FFCC99/000000?text=Gin+Tonic','https://via.placeholder.com/150/FFCC99/000000?text=Grapefruitlimo']},
-//   { letter: 'H', imgs: ['https://via.placeholder.com/150/CCCCFF/000000?text=Hugo','https://via.placeholder.com/150/CCCCFF/000000?text=Heißer+Kakao']},
-//   { letter: 'I', imgs: ['https://via.placeholder.com/150/FFB6C1/000000?text=Iced+Tea','https://via.placeholder.com/150/FFB6C1/000000?text=Irish+Coffee']},
-//   { letter: 'J', imgs: ['https://via.placeholder.com/150/FFDAB9/000000?text=Jägermeister','https://via.placeholder.com/150/FFDAB9/000000?text=Johannisbeersaft']},
-//   { letter: 'K', imgs: ['https://via.placeholder.com/150/FFE4B5/000000?text=Kaffee','https://via.placeholder.com/150/FFE4B5/000000?text=Kombucha']},
-//   { letter: 'L', imgs: ['https://via.placeholder.com/150/AFEEEE/000000?text=Limonade','https://via.placeholder.com/150/AFEEEE/000000?text=Latte+Macchiato']},
-//   { letter: 'M', imgs: ['https://via.placeholder.com/150/98FB98/000000?text=Mojito','https://via.placeholder.com/150/98FB98/000000?text=Milchshake']},
-//   { letter: 'N', imgs: ['https://via.placeholder.com/150/FFDEAD/000000?text=Nektar','https://via.placeholder.com/150/FFDEAD/000000?text=Nescafé']},
-//   { letter: 'O', imgs: ['https://via.placeholder.com/150/FFD700/000000?text=Orangensaft','https://via.placeholder.com/150/FFD700/000000?text=Oolong+Tee']},
-//   { letter: 'P', imgs: ['https://via.placeholder.com/150/FF7F50/000000?text=Pina+Colada','https://via.placeholder.com/150/FF7F50/000000?text=Pfefferminztee']},
-//   { letter: 'Q', imgs: ['https://via.placeholder.com/150/EEE8AA/000000?text=Quittensaft','https://via.placeholder.com/150/EEE8AA/000000?text=Quarantini']},
-//   { letter: 'R', imgs: ['https://via.placeholder.com/150/CD5C5C/000000?text=Rum','https://via.placeholder.com/150/CD5C5C/000000?text=Rhabarberschorle']},
-//   { letter: 'S', imgs: ['https://via.placeholder.com/150/87CEFA/000000?text=Smoothie','https://via.placeholder.com/150/87CEFA/000000?text=Sangria']},
-//   { letter: 'T', imgs: ['https://via.placeholder.com/150/90EE90/000000?text=Tee','https://via.placeholder.com/150/90EE90/000000?text=Tomatensaft']},
-//   { letter: 'U', imgs: ['https://via.placeholder.com/150/DAA520/000000?text=Umeshu','https://via.placeholder.com/150/DAA520/000000?text=Uva+Saft']},
-//   { letter: 'V', imgs: ['https://via.placeholder.com/150/BA55D3/000000?text=Vodka+Lemon','https://via.placeholder.com/150/BA55D3/000000?text=Vanillemilch']},
-//   { letter: 'W', imgs: ['https://via.placeholder.com/150/40E0D0/000000?text=Wein','https://via.placeholder.com/150/40E0D0/000000?text=Whiskey+Sour']},
-//   { letter: 'X', imgs: ['https://via.placeholder.com/150/FF4500/000000?text=X+Mas+Punch','https://via.placeholder.com/150/FF4500/000000?text=Xanthan+Drink']},
-//   { letter: 'Y', imgs: ['https://via.placeholder.com/150/9ACD32/000000?text=Yerba+Mate','https://via.placeholder.com/150/9ACD32/000000?text=Yoghurt+Drink']},
-//   { letter: 'Z', imgs: ['https://via.placeholder.com/150/FF69B4/000000?text=Zitronenlimonade','https://via.placeholder.com/150/FF69B4/000000?text=Zimtpunsch']}
+const drinksData = [
+  {
+    player1: [
+      { img: 'images/antje-kaffee.png', description: 'Annas Lieblingskaffee' },
+      { img: 'images/antje-tee.png', description: 'Annas Lieblingstee' }
+    ],
+    player2: [
+      { img: 'images/wolfgang-bier.png', description: 'Wolfgangs Lieblingsbier' },
+      { img: 'images/wolfgang-wein.png', description: 'Wolfgangs Lieblingswein' }
+    ]
+  },
+  {
+    player1: [
+      { img: 'images/antje-smoothie.png', description: 'Annas Smoothie' }
+    ],
+    player2: [
+      { img: 'images/bier.png', description: 'Bier' },
+      { img: 'images/wolfgang-sprite.png', description: 'Wolfgangs Sprite' }
+    ]
+  }
 ];
 
   let currentPlayer;
@@ -217,18 +213,34 @@ console.log("rows:", rows);
     document.getElementById('score1').textContent = score1;
     document.getElementById('score2').textContent = score2;
 
+    document.getElementById('player1').innerHTML = `👩 ${player1}: <span id="score1">0</span>`;
+    document.getElementById('player2').innerHTML = `👨 ${player2}: <span id="score2">0</span>`;
+
     // Startspieler zufällig bestimmen
     currentPlayer = Math.random() < 0.5 ? 1 : 2;
     updateActivePlayer();
 
-    const selectedLetters = shuffleArray(drinksData).slice(0, totalPairs());
-    console.log("selectedLetters:", selectedLetters);
+    const selectedDrinks = shuffleArray(drinksData).slice(0, totalPairs());
+    console.log("selectedDrinks:", selectedDrinks);
     const cardSet = [];
 
-    selectedLetters.forEach(drink => {
-      const randomImg = drink.imgs[Math.floor(Math.random() * drink.imgs.length)];
-      cardSet.push({ type: 'letter', content: drink.letter, matchKey: drink.letter });
-      cardSet.push({ type: 'image', content: randomImg, matchKey: drink.letter });
+    selectedDrinks.forEach((drinkPair, index) => {
+      const player1Drink = drinkPair.player1[Math.floor(Math.random() * drinkPair.player1.length)];
+      const player2Drink = drinkPair.player2[Math.floor(Math.random() * drinkPair.player2.length)];
+      const pairKey = `pair_${index}`;
+
+      cardSet.push({ 
+        type: 'player1',
+        content: player1Drink.img, 
+        description: player1Drink.description,
+        matchKey: pairKey  
+      });
+      cardSet.push({ 
+        type: 'player2', 
+        content: player2Drink.img, 
+        description: player2Drink.description,
+        matchKey: pairKey 
+      });
     });
 
     const shuffledCards = shuffleArray(cardSet);
@@ -241,6 +253,7 @@ console.log("rows:", rows);
       cardEl.dataset.type = card.type;
       cardEl.dataset.matchKey = card.matchKey;
       cardEl.dataset.index = index;
+      cardEl.title = card.description;
 
       const cardInner = document.createElement('div');
       cardInner.classList.add('card-inner');
@@ -254,13 +267,10 @@ console.log("rows:", rows);
 
       const cardBack = document.createElement('div');
       cardBack.classList.add('card-back');
-      if (card.type === 'letter') {
-        cardBack.textContent = card.content;
-      } else {
-        const cardBackImg = document.createElement('img');
-        cardBackImg.src = card.content;
-        cardBack.appendChild(cardBackImg);
-      }
+      const cardBackImg = document.createElement('img');
+      cardBackImg.src = card.content;
+      cardBackImg.alt = card.description;
+      cardBack.appendChild(cardBackImg);
 
       cardInner.appendChild(cardFront);
       cardInner.appendChild(cardBack);
@@ -322,8 +332,8 @@ console.log("rows:", rows);
 
   function endGame() {
     let winner = '';
-    if (score1 > score2) winner = 'Antje gewinnt!';
-    else if (score2 > score1) winner = 'Wolfgang gewinnt!';
+    if (score1 > score2) winner = `${player1} gewinnt!`;
+    else if (score2 > score1) winner = `${player2} gewinnt!`;
     else winner = 'Unentschieden!';
     alert(`Spiel beendet!\n${winner}`);
     initGame();

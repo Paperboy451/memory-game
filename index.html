@@ -127,7 +127,7 @@
   #winnerBox{
     position:relative; width:min(92vw,520px);
     background:#fff8d6; border-radius:18px; padding:22px 28px; text-align:center;
-    box-shadow: 0 10px 40px rgba(0,0,0,0.18); z-index:2;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18); z-index:10;
     transform-origin:center; animation: popIn .5s ease;
   }
   @keyframes popIn {
@@ -157,8 +157,14 @@
   #closeOverlay:focus { outline: 2px solid rgba(0,0,0,0.12); outline-offset:2px; }
 
   .confetti {
-    position:absolute; top:-20px; width:10px; height:10px; opacity:0.98;
-    pointer-events:none; will-change: transform, opacity;
+    position:absolute; 
+    top:-20px; 
+    width:10px; 
+    height:10px; 
+    z-index: 20;
+    opacity:0.98;
+    pointer-events:none; 
+    will-change: transform, opacity;
     border-radius: 2px;
   }
 
@@ -168,8 +174,12 @@
   }
 
   @media (max-width:480px){
-    header h1 { font-size:1.5rem }
-    #winnerBox { padding:20px 22px }
+    header h1 { 
+      font-size:1.5rem 
+    }
+    #winnerBox { 
+      padding:20px 22px 
+    }
   }
 
 </style>
@@ -199,8 +209,52 @@
   const flipDelay = 3000; // Zeit in ms, wie lange Karten sichtbar bleiben
   const player1 = "Antje"; // Hier den Namen des ersten Spielers eintragen
   const player2 = "Wolfgang";
+
+  const drinksData = [
+    {
+      player1: [
+        { img: 'images/almkräutertee.png', description: 'Almkräutertee' },
+        { img: 'images/aperol.png', description: 'Aperol' }
+      ],
+      player2: [
+        { img: 'images/aperol.png', description: 'Aperol' },
+      ]
+    },
+    {
+      player1: [
+        { img: 'images/bionade.png', description: 'Bionade' }
+      ],
+      player2: [
+        { img: 'images/bier.png', description: 'Bier' },
+      ]
+    },
+    {
+      player1: [
+        { img: 'images/caipi.png', description: 'Caipi' },
+        { img: 'images/cuba_libre.png', description: 'Cuba Libre' },
+      ],
+      player2: [
+        { img: 'images/caipi.png', description: 'Caipi' },
+        { img: 'images/cuba_libre.png', description: 'Cuba Libre' },
+      ]
+    },
+    {
+      player1: [
+        { img: 'images/darjeeling.png', description: 'Darjeeling' },
+      ],
+      player2: [
+        { img: 'images/darjeeling.png', description: 'Darjeeling' },
+      ]
+    }
+  ];
   
+  const totalPairs = () => 2; //(gridRows * gridCols) / 2;
   let gridRows, gridCols;
+  let currentPlayer;
+  let score1 = 0, score2 = 0;
+  let flippedCards = [];
+  let matchedCount = 0;
+
   function calcGrid() {
     const width = window.innerWidth;
     const height = window.innerHeight;
@@ -223,7 +277,6 @@ console.log("rows:", rows);
     gridCols = cols;
     gridRows = rows;
   }
-  calcGrid();
 
   function resizeCards() {
     const board = document.getElementById('gameBoard');
@@ -244,55 +297,6 @@ console.log("rows:", rows);
     gameBoard.style.gridTemplateRows = `repeat(${gridRows}, ${cardSize}px)`;
 
   }
-  window.addEventListener('resize', resizeCards);
-
-  const totalPairs = () => 2; //(gridRows * gridCols) / 2;
-
-  // === Getränke-Daten ===
-const drinksData = [
-  {
-    player1: [
-      { img: 'images/almkräutertee.png', description: 'Almkräutertee' },
-      { img: 'images/aperol.png', description: 'Aperol' }
-    ],
-    player2: [
-      { img: 'images/aperol.png', description: 'Aperol' },
-    ]
-  },
-  {
-    player1: [
-      { img: 'images/bionade.png', description: 'Bionade' }
-    ],
-    player2: [
-      { img: 'images/bier.png', description: 'Bier' },
-    ]
-  },
-  {
-    player1: [
-      { img: 'images/caipi.png', description: 'Caipi' },
-      { img: 'images/cuba_libre.png', description: 'Cuba Libre' },
-    ],
-    player2: [
-      { img: 'images/caipi.png', description: 'Caipi' },
-      { img: 'images/cuba_libre.png', description: 'Cuba Libre' },
-    ]
-  },
-  {
-    player1: [
-      { img: 'images/darjeeling.png', description: 'Darjeeling' },
-    ],
-    player2: [
-      { img: 'images/darjeeling.png', description: 'Darjeeling' },
-    ]
-  }
-
-
-];
-
-  let currentPlayer;
-  let score1 = 0, score2 = 0;
-  let flippedCards = [];
-  let matchedCount = 0;
 
   function initGame() {
     score1 = 0; score2 = 0; matchedCount = 0;
@@ -365,6 +369,7 @@ const drinksData = [
       cardEl.addEventListener('click', () => flipCard(cardEl));
       gameBoard.appendChild(cardEl);
     });
+    
     resizeCards();
   }
 
@@ -428,44 +433,47 @@ const drinksData = [
     document.querySelectorAll('#winnerOverlay .confetti').forEach(n => n.remove());
   }
 
-function launchConfetti(count = 120, durationBase = 3500) {
-  const overlay = document.getElementById('winnerOverlay');
-  const rect = overlay.getBoundingClientRect();
-  const colors = ['#ff3366','#ffcc00','#66ccff','#33cc66','#9b59b6'];
+  function launchConfetti(count = 120, durationBase = 3500, spreadTime = 2000) {
+    const overlay = document.getElementById('winnerOverlay');
+    const rect = overlay.getBoundingClientRect();
+    const colors = ['#ff3366','#ffcc00','#66ccff','#33cc66','#9b59b6'];
 
-  clearConfetti();
+    clearConfetti();
 
-  for (let i = 0; i < count; i++) {
-    const el = document.createElement('div');
-    el.className = 'confetti';
-    const size = 6 + Math.random() * 8;
-    el.style.width = size + 'px';
-    el.style.height = size + 'px';
-    el.style.backgroundColor = colors[(Math.random() * colors.length) | 0];
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const el = document.createElement('div');
+        el.className = 'confetti';
+        const size = 6 + Math.random() * 8;
+        el.style.width = size + 'px';
+        el.style.height = size + 'px';
+        el.style.backgroundColor = colors[(Math.random() * colors.length) | 0];
 
-    const startX = Math.random() * rect.width;
-    const drift = (Math.random() - 0.5) * 240;
-    const duration = durationBase + Math.random() * 1500; // Basiswert + Zufall
-    const delay = Math.random() * 250;
-    el.style.left = startX + 'px';
+        const startX = Math.random() * rect.width;
+        const drift = (Math.random() - 0.5) * 240;
+        const duration = durationBase + Math.random() * 2000;
+        el.style.left = startX + 'px';
 
-    overlay.appendChild(el);
+        overlay.appendChild(el);
 
-    if (el.animate) {
-      const rot = 360 + Math.random() * 360;
-      el.animate([
-        { transform: 'translate3d(0, -12px, 0) rotate(0deg)',   opacity: 1 },
-        { transform: `translate3d(${drift}px, ${rect.height + 60}px, 0) rotate(${rot}deg)`, opacity: 0 }
-      ], { duration, delay, easing: 'linear', fill: 'forwards' });
-      setTimeout(() => el.remove(), duration + delay + 100);
-    } else {
-      el.style.setProperty('--x', startX + 'px');
-      el.style.setProperty('--drift', drift + 'px');
-      el.style.animation = `confettiFall ${duration}ms linear ${delay}ms forwards`;
-      setTimeout(() => el.remove(), duration + delay + 500);
+        if (el.animate) {
+          const rot = 360 + Math.random() * 720;
+          el.animate([
+            { transform: 'translate3d(0, -12px, 0) rotate(0deg)', opacity: 1 },
+            { transform: `translate3d(${drift}px, ${rect.height + 60}px, 0) rotate(${rot}deg)`, opacity: 0 }
+          ], { duration, easing: 'linear', fill: 'forwards' });
+          setTimeout(() => el.remove(), duration + 100);
+        } else {
+          // Fallback
+          el.style.setProperty('--x', startX + 'px');
+          el.style.setProperty('--drift', drift + 'px');
+          el.style.animation = `confettiFall ${duration}ms linear forwards`;
+          setTimeout(() => el.remove(), duration + 500);
+        }
+      }, Math.random() * spreadTime); // jedes Schnipsel startet zu einer zufälligen Zeit
     }
   }
-}
+
   function showWinnerOverlay(text) {
     const overlay = document.getElementById('winnerOverlay');
     document.getElementById('winnerText').textContent = text;
@@ -475,24 +483,8 @@ function launchConfetti(count = 120, durationBase = 3500) {
     // force reflow – hilft insbesondere auf iOS/Safari damit Animationen sicher starten
     void overlay.offsetHeight;
 
-    // startee Konfetti (nach Reflow)
-    launchConfetti(200, 5000);
+    launchConfetti(200, 5000, 2000);
   }
-
-  // Button-Handler für Overlay
-  document.getElementById('newGameBtn').addEventListener('click', () => {
-    document.getElementById('winnerOverlay').style.display = 'none';
-    document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
-    clearConfetti();
-    initGame();
-  });
-
-  document.getElementById('closeOverlay').addEventListener('click', () => {
-    document.getElementById('winnerOverlay').style.display = 'none';
-    document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
-    clearConfetti();
-  });
-
 
   function shuffleArray(array) {
     const arr = [...array];
@@ -505,14 +497,22 @@ function launchConfetti(count = 120, durationBase = 3500) {
 
   document.getElementById('newGameBtn').addEventListener('click', () => {
     document.getElementById('winnerOverlay').style.display = 'none';
+    document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
+    clearConfetti();
     initGame();
   });
 
   document.getElementById('closeOverlay').addEventListener('click', () => {
     document.getElementById('winnerOverlay').style.display = 'none';
+    document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
+    clearConfetti();
   });
 
+  window.addEventListener('resize', resizeCards);
+
+  calcGrid();
   initGame();
+
 </script>
 </body>
 </html>

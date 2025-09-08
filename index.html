@@ -4,9 +4,10 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Lieblingsgetränke Memory</title>
+<link href="https://fonts.googleapis.com/css2?family=Comic+Neue:wght@500;700&display=swap" rel="stylesheet">
 <style>
   body {
-    font-family: 'Comic Sans MS', cursive, sans-serif;
+    font-family: 'Comic Neue', 'Comic Sans MS', cursive, sans-serif;
     background: #ffd27f; /* feste Farbe */
     display: flex;
     flex-direction: column;
@@ -104,14 +105,73 @@
     border: none;
   }
   @keyframes matchPulse {
-  0%   { transform: rotateY(180deg) scale(1); box-shadow: 0 0 0px 0 rgba(0,255,128,0); }
-  40%  { transform: rotateY(180deg) scale(1.15); box-shadow: 0 0 25px 10px rgba(0,255,128,0.8); }
-  100% { transform: rotateY(180deg) scale(1); box-shadow: 0 0 0px 0 rgba(0,255,128,0); }
-}
+    0%   { transform: rotateY(180deg) scale(1); box-shadow: 0 0 0px 0 rgba(0,255,128,0); }
+    40%  { transform: rotateY(180deg) scale(1.15); box-shadow: 0 0 25px 10px rgba(0,255,128,0.8); }
+    100% { transform: rotateY(180deg) scale(1); box-shadow: 0 0 0px 0 rgba(0,255,128,0); }
+  }
 
-.card.matched .card-inner {
-  animation: matchPulse 0.7s ease;
-}
+  .card.matched .card-inner {
+    animation: matchPulse 0.7s ease;
+  }
+
+  #winnerOverlay{
+    position:fixed; inset:0; 
+    padding: 20px;
+    display:none;
+    align-items:center; 
+    justify-content:center;
+    background: rgba(0,0,0,0.55); 
+    z-index:1200; 
+    overflow:hidden;
+  }
+  #winnerBox{
+    position:relative; width:min(92vw,520px);
+    background:#fff8d6; border-radius:18px; padding:22px 28px; text-align:center;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.18); z-index:2;
+    transform-origin:center; animation: popIn .5s ease;
+  }
+  @keyframes popIn {
+    0% { transform: scale(.8); opacity:0 }
+    70% { transform: scale(1.05); opacity:1 }
+    100% { transform: scale(1); }
+  }
+
+  #newGameBtn {
+    margin-top:6px;
+    background: #ff5146; color:#fff; border:none; border-radius:12px;
+    padding:12px 20px; font-size:1.05rem; cursor:pointer;
+    font-family:inherit; transition: transform .12s ease, background .12s ease;
+  }
+  #newGameBtn:hover { transform: scale(1.04); background:#e6453c; }
+  #newGameBtn:active { transform: scale(.98); }
+
+  #closeOverlay {
+    position:absolute; top:10px; right:10px;
+    width:22px; height:22px; padding:0; border-radius:50%;
+    border:1px solid rgba(0,0,0,0.08);
+    background: rgba(0,0,0,0.04); color:#666; font-size:13px; line-height:22px;
+    display:flex; align-items:center; justify-content:center;
+    cursor:pointer; opacity:.92;
+  }
+  #closeOverlay:hover { background: rgba(0,0,0,0.07); opacity:1 }
+  #closeOverlay:focus { outline: 2px solid rgba(0,0,0,0.12); outline-offset:2px; }
+
+  .confetti {
+    position:absolute; top:-20px; width:10px; height:10px; opacity:0.98;
+    pointer-events:none; will-change: transform, opacity;
+    border-radius: 2px;
+  }
+
+  @keyframes confettiFall {
+    0%   { transform: translate3d(0, -12vh, 0) rotate(0deg); opacity:1; }
+    100% { transform: translate3d(var(--drift,0px), 110vh, 0) rotate(720deg); opacity:0; }
+  }
+
+  @media (max-width:480px){
+    header h1 { font-size:1.5rem }
+    #winnerBox { padding:20px 22px }
+  }
+
 </style>
 </head>
 <body>
@@ -125,6 +185,14 @@
 </header>
 
 <div id="gameBoard" class="game-board"></div>
+
+<div id="winnerOverlay">
+  <div id="winnerBox">
+    <button id="closeOverlay">×</button>
+    <h2 id="winnerText">🎉 Gewinner! 🎉</h2>
+    <button id="newGameBtn">Neues Spiel</button>
+  </div>
+</div>
 
 <script>
   // === Einstellungen ===
@@ -184,23 +252,41 @@ console.log("rows:", rows);
 const drinksData = [
   {
     player1: [
-      { img: 'images/antje-kaffee.png', description: 'Annas Lieblingskaffee' },
-      { img: 'images/antje-tee.png', description: 'Annas Lieblingstee' }
+      { img: 'images/almkräutertee.png', description: 'Almkräutertee' },
+      { img: 'images/aperol.png', description: 'Aperol' }
     ],
     player2: [
-      { img: 'images/wolfgang-bier.png', description: 'Wolfgangs Lieblingsbier' },
-      { img: 'images/wolfgang-wein.png', description: 'Wolfgangs Lieblingswein' }
+      { img: 'images/aperol.png', description: 'Aperol' },
     ]
   },
   {
     player1: [
-      { img: 'images/antje-smoothie.png', description: 'Annas Smoothie' }
+      { img: 'images/bionade.png', description: 'Bionade' }
     ],
     player2: [
       { img: 'images/bier.png', description: 'Bier' },
-      { img: 'images/wolfgang-sprite.png', description: 'Wolfgangs Sprite' }
+    ]
+  },
+  {
+    player1: [
+      { img: 'images/caipi.png', description: 'Caipi' },
+      { img: 'images/cuba_libre.png', description: 'Cuba Libre' },
+    ],
+    player2: [
+      { img: 'images/caipi.png', description: 'Caipi' },
+      { img: 'images/cuba_libre.png', description: 'Cuba Libre' },
+    ]
+  },
+  {
+    player1: [
+      { img: 'images/darjeeling.png', description: 'Darjeeling' },
+    ],
+    player2: [
+      { img: 'images/darjeeling.png', description: 'Darjeeling' },
     ]
   }
+
+
 ];
 
   let currentPlayer;
@@ -332,16 +418,99 @@ const drinksData = [
 
   function endGame() {
     let winner = '';
-    if (score1 > score2) winner = `${player1} gewinnt!`;
-    else if (score2 > score1) winner = `${player2} gewinnt!`;
-    else winner = 'Unentschieden!';
-    alert(`Spiel beendet!\n${winner}`);
-    initGame();
+    if (score1 > score2) winner = `${player1} gewinnt! 🎉`;
+    else if (score2 > score1) winner = `${player2} gewinnt! 🎉`;
+    else winner = 'Unentschieden! 🤝';
+    showWinnerOverlay(winner);
   }
 
-  function shuffleArray(array) {
-    return array.sort(() => Math.random() - 0.5);
+  function clearConfetti() {
+    document.querySelectorAll('#winnerOverlay .confetti').forEach(n => n.remove());
   }
+
+function launchConfetti(count = 120, durationBase = 3500) {
+  const overlay = document.getElementById('winnerOverlay');
+  const rect = overlay.getBoundingClientRect();
+  const colors = ['#ff3366','#ffcc00','#66ccff','#33cc66','#9b59b6'];
+
+  clearConfetti();
+
+  for (let i = 0; i < count; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti';
+    const size = 6 + Math.random() * 8;
+    el.style.width = size + 'px';
+    el.style.height = size + 'px';
+    el.style.backgroundColor = colors[(Math.random() * colors.length) | 0];
+
+    const startX = Math.random() * rect.width;
+    const drift = (Math.random() - 0.5) * 240;
+    const duration = durationBase + Math.random() * 1500; // Basiswert + Zufall
+    const delay = Math.random() * 250;
+    el.style.left = startX + 'px';
+
+    overlay.appendChild(el);
+
+    if (el.animate) {
+      const rot = 360 + Math.random() * 360;
+      el.animate([
+        { transform: 'translate3d(0, -12px, 0) rotate(0deg)',   opacity: 1 },
+        { transform: `translate3d(${drift}px, ${rect.height + 60}px, 0) rotate(${rot}deg)`, opacity: 0 }
+      ], { duration, delay, easing: 'linear', fill: 'forwards' });
+      setTimeout(() => el.remove(), duration + delay + 100);
+    } else {
+      el.style.setProperty('--x', startX + 'px');
+      el.style.setProperty('--drift', drift + 'px');
+      el.style.animation = `confettiFall ${duration}ms linear ${delay}ms forwards`;
+      setTimeout(() => el.remove(), duration + delay + 500);
+    }
+  }
+}
+  function showWinnerOverlay(text) {
+    const overlay = document.getElementById('winnerOverlay');
+    document.getElementById('winnerText').textContent = text;
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden', 'false');
+
+    // force reflow – hilft insbesondere auf iOS/Safari damit Animationen sicher starten
+    void overlay.offsetHeight;
+
+    // startee Konfetti (nach Reflow)
+    launchConfetti(200, 5000);
+  }
+
+  // Button-Handler für Overlay
+  document.getElementById('newGameBtn').addEventListener('click', () => {
+    document.getElementById('winnerOverlay').style.display = 'none';
+    document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
+    clearConfetti();
+    initGame();
+  });
+
+  document.getElementById('closeOverlay').addEventListener('click', () => {
+    document.getElementById('winnerOverlay').style.display = 'none';
+    document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
+    clearConfetti();
+  });
+
+
+  function shuffleArray(array) {
+    const arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  document.getElementById('newGameBtn').addEventListener('click', () => {
+    document.getElementById('winnerOverlay').style.display = 'none';
+    initGame();
+  });
+
+  document.getElementById('closeOverlay').addEventListener('click', () => {
+    document.getElementById('winnerOverlay').style.display = 'none';
+  });
 
   initGame();
 </script>

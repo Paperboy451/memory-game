@@ -321,9 +321,19 @@
         { img: 'images/darjeeling.png', description: 'Darjeeling' },
       ],
       player2: [
-        { img: 'images/darjeeling.png', description: 'Darjeeling' },
+        { img: 'images/doppelkorn.png', description: 'Doppelkorn' },
+      ]
+    },
+    {
+      player1: [
+        { img: 'images/eisschokolade.png', description: 'Eisschokolade' },
+      ],
+      player2: [
+        { img: 'images/eisschokolade.png', description: 'Eisschokolade' },
+        { img: 'images/espresso.png', description: 'Espresso' },
       ]
     }
+
   ];
   
   let currentPlayer;
@@ -381,6 +391,10 @@
   } 
 
   function getAvailablePairs(difficulty) {
+    let test = drinksData.filter(d =>
+            d.player1.some(d1 => d.player2.some(d2 => d2.img === d1.img))
+        );
+        console.log("Identisch:", test);
     if (difficulty === "normal") {
         return drinksData.filter(d =>
             d.player1.some(d1 => d.player2.some(d2 => d2.img === d1.img))

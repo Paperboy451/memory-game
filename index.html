@@ -254,23 +254,20 @@
   <div id="settingsBox">
     <button id="closeSettings" title="Schließen">×</button>
     <h2>Einstellungen</h2>
-    
-    <div class="setting">
-      <label for="rowsSelect">Zeilen:</label>
-      <select id="rowsSelect"></select>
-    </div>
-    <div class="setting">
-      <label for="colsSelect">Spalten:</label>
-      <select id="colsSelect"></select>
-    </div>
+
     <div class="setting">
       <label for="difficultySelect">Schwierigkeit:</label>
       <select id="difficultySelect">
-        <option value="normal">Harmonie</option>
+        <option value="normal">Harmonisch</option>
         <option value="hard">Knifflig</option>
       </select>
     </div>
-    
+
+    <div class="setting">
+      <label for="pairsSelect">Anzahl der Paare:</label>
+      <select id="pairsSelect"></select>
+    </div>
+
     <button id="applySettingsBtn">Übernehmen</button>
   </div>
 </div>
@@ -334,10 +331,9 @@
   let gameDifficulty = 'normal';
   let flippedCards = [];
   let matchedCount = 0;
-  let gridCols;
-  let gridRows;
-  let maxPairs;
-
+  let gridCols, gridRows;
+  let selectedPairs;
+  
   function getGridLimits() {
     let maxCols, maxRows;
     
@@ -352,15 +348,11 @@
     return { maxCols, maxRows };
   }
 
-  function calcGrid() {
-    const { maxCols, maxRows } = getGridLimits();
-    console.log("cols:", maxCols);
-    console.log("rows:", maxRows);
-    gridCols = maxCols;
-    gridRows = maxRows;
-  }
 
-  function resizeCards() {
+  function calcOptimalGrid(pairs) {
+    const cards = pairs * 2;
+    const { maxCols, maxRows } = getGridLimits();
+
     const board = document.getElementById('gameBoard');
     const gap = 15;
     const minCardSize = 70;
@@ -368,36 +360,74 @@
     const availableWidth = window.innerWidth - 20;
     const availableHeight = window.innerHeight - board.getBoundingClientRect().top - 40;
 
-    const cardWidth = (availableWidth - (gridCols - 1) * gap) / gridCols;
-    const cardHeight = (availableHeight - (gridRows - 1) * gap) / gridRows;
-    const cardSize = Math.max(minCardSize, Math.min(cardWidth, cardHeight));
+    let bestRows = 1, bestCols = cards, bestCardSize = minCardSize;
 
-    console.log("cardWidth:", cardWidth);
-    console.log("cardHeight:", cardHeight);
-    console.log("card size:", cardSize);
-    gameBoard.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
-    gameBoard.style.gridTemplateRows = `repeat(${gridRows}, ${cardSize}px)`;
+    for (let r = 1; r <= Math.min(maxRows, cards); r++) {
+        let c = Math.ceil(cards / r);
+        if (c > maxCols) continue;
+
+        let cardWidth = (availableWidth - (c - 1) * gap) / c;
+        let cardHeight = (availableHeight - (r - 1) * gap) / r;
+        let cardSize = Math.max(minCardSize, Math.min(cardWidth, cardHeight));
+
+        if (cardSize > bestCardSize || (cardSize === bestCardSize && Math.abs(r - c) < Math.abs(bestRows - bestCols))) {
+            bestRows = r;
+            bestCols = c;
+            bestCardSize = cardSize;
+        }
+    }
+
+    return { rows: bestRows, cols: bestCols, cardSize: bestCardSize };
+  } 
+
+  function getAvailablePairs(difficulty) {
+    if (difficulty === "normal") {
+        return drinksData.filter(d =>
+            d.player1.some(d1 => d.player2.some(d2 => d2.img === d1.img))
+        );
+    } else {
+        return drinksData;
+    }
   }
 
-  function populateGridOptions() {
-    rowsSelect.innerHTML = '';
-    colsSelect.innerHTML = '';
-    
+  function populatePairsOptions() {
     const { maxCols, maxRows } = getGridLimits();
-    for (let r=1; r<=maxRows; r++) {
-      const opt = document.createElement('option'); 
-      opt.value=r; 
-      opt.textContent=r; 
-      rowsSelect.appendChild(opt);
+    const availablePairs = getAvailablePairs(gameDifficulty);
+
+    const maxPairsAllowed = Math.floor(maxCols * maxRows / 2);
+    const totalPairs = Math.min(availablePairs.length, maxPairsAllowed);
+
+    pairsSelect.innerHTML = '';
+    for (let i = 1; i <= totalPairs; i++) {
+        const opt = document.createElement('option');
+        opt.value = i;
+        opt.textContent = i;
+        pairsSelect.appendChild(opt);
     }
-    for (let c=2; c<=maxCols; c++) {
-      const opt = document.createElement('option'); 
-      opt.value=c; 
-      opt.textContent=c; 
-      colsSelect.appendChild(opt);
+
+    pairsSelect.value = selectedPairs || totalPairs;
+    if (!selectedPairs) {
+      selectedPairs = totalPairs; 
     }
-    rowsSelect.value = gridRows;
-    colsSelect.value = gridCols;
+  }
+
+  function resizeCards() {
+    const { cardSize } = calcOptimalGrid(selectedPairs);
+    gameBoard.style.gridTemplateColumns = `repeat(${gridCols}, ${cardSize}px)`;
+    gameBoard.style.gridTemplateRows = `repeat(${gridRows}, ${cardSize}px)`;
+
+    return cardSize;
+  }
+
+  function initDefaults() {
+    const { maxCols, maxRows } = getGridLimits();
+    let availablePairs = getAvailablePairs(gameDifficulty);  
+    
+    selectedPairs = Math.min(availablePairs.length, Math.floor(maxCols*maxRows/2));
+
+    const { cols, rows } = calcOptimalGrid(selectedPairs);
+    gridCols = cols;
+    gridRows = rows;
   }
 
   function initGame() {
@@ -412,24 +442,10 @@
     currentPlayer = Math.random() < 0.5 ? 1 : 2;
     updateActivePlayer();
 
-    let shuffledDrinks = shuffleArray(drinksData);
-    const requestedPairs = (gridRows * gridCols) / 2;
-    let availablePairs;
-    if (gameDifficulty === "normal") {
-      availablePairs = shuffledDrinks.filter(d =>
-        d.player1.some(d1 => d.player2.some(d2 => d2.img === d1.img))
-      );
-    } else {
-      availablePairs = shuffledDrinks;
-    }
-    const maxPairs = Math.min(availablePairs.length, requestedPairs);
-    if (maxPairs < requestedPairs) {
-      gridRows = Math.floor((maxPairs * 2) / gridCols);
-    }
-    console.log("requestedPairs:", requestedPairs);
+    let shuffledPairs = shuffleArray(getAvailablePairs(gameDifficulty));
 
     const cardSet = [];
-    availablePairs.slice(0, maxPairs).forEach((drinkPair, index) => {
+    shuffledPairs.slice(0, selectedPairs).forEach((drinkPair, index) => {
       let player1Drink, player2Drink;
       if(gameDifficulty === 'normal') {
         const sameDrinks = drinkPair.player1.filter(d1 =>
@@ -461,7 +477,7 @@
 
     const shuffledCards = shuffleArray(cardSet);
     const gameBoard = document.getElementById('gameBoard');
-    
+
     gameBoard.innerHTML = '';
     shuffledCards.forEach((card, index) => {
       const cardEl = document.createElement('div');
@@ -526,7 +542,7 @@
             document.getElementById('score2').textContent = score2;
         }
         flippedCards = [];
-        if (matchedCount === maxPairs) {
+        if (matchedCount === selectedPairs) {
             setTimeout(endGame, 500);
         }
       }, 700); // 0.7s pulse effekt
@@ -621,38 +637,47 @@
     return arr;
   }
 
-  calcGrid();
+  initDefaults();
   initGame();
 
   const settingsOverlay = document.getElementById('settingsOverlay');
-  const settingsBox = document.getElementById('settingsBox');
   const settingsBtn = document.getElementById('settingsBtn');
   const closeSettings = document.getElementById('closeSettings');
   const applySettingsBtn = document.getElementById('applySettingsBtn');
 
-  const rowsSelect = document.getElementById('rowsSelect');
-  const colsSelect = document.getElementById('colsSelect');
   const difficultySelect = document.getElementById('difficultySelect');
 
+  difficultySelect.addEventListener('change', () => {
+      gameDifficulty = difficultySelect.value;
+      populatePairsOptions();
+  });
+
   settingsBtn.addEventListener('click', () => {
-    populateGridOptions();
-    settingsOverlay.style.display = 'flex';
-    settingsOverlay.setAttribute('aria-hidden','false');
+      populatePairsOptions();
+      settingsOverlay.style.display = 'flex';
+      settingsOverlay.setAttribute('aria-hidden','false');
   });
   closeSettings.addEventListener('click', () => {
+    document.activeElement.blur();
     settingsOverlay.style.display = 'none';
     settingsOverlay.setAttribute('aria-hidden','true');
   });
+
   applySettingsBtn.addEventListener('click', () => {
-    gridRows = parseInt(rowsSelect.value);
-    gridCols = parseInt(colsSelect.value);
-    gameDifficulty = difficultySelect.value;  
-    settingsOverlay.style.display = 'none';
-    settingsOverlay.setAttribute('aria-hidden','true');
-    initGame(); 
+      selectedPairs = parseInt(pairsSelect.value);
+      const { cols, rows } = calcOptimalGrid(selectedPairs);
+      gridCols = cols;
+      gridRows = rows;
+
+      document.activeElement.blur();
+      settingsOverlay.style.display = 'none';
+      settingsOverlay.setAttribute('aria-hidden','true');
+
+      initGame();
   });
 
   document.getElementById('newGameBtn').addEventListener('click', () => {
+    document.activeElement.blur();
     document.getElementById('winnerOverlay').style.display = 'none';
     document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
     clearConfetti();
@@ -660,6 +685,7 @@
   });
 
   document.getElementById('closeOverlay').addEventListener('click', () => {
+    document.activeElement.blur();
     document.getElementById('winnerOverlay').style.display = 'none';
     document.getElementById('winnerOverlay').setAttribute('aria-hidden','true');
     clearConfetti();

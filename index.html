@@ -291,7 +291,7 @@
   const drinksData = [
     {
       player1: [
-        { img: 'images/almkräutertee.png', description: 'Almkräutertee' },
+        { img: 'images/almkraeutertee.png', description: 'Almkräutertee' },
         { img: 'images/aperol.png', description: 'Aperol' }
       ],
       player2: [
@@ -344,18 +344,18 @@
     },
     {
       player1: [
-        { img: 'images/glühwein.png', description: 'Glühwein' },
-        { img: 'images/grüner_tee.png', description: 'Grüner Tee' },
+        { img: 'images/gluehwein.png', description: 'Glühwein' },
+        { img: 'images/gruener_tee.png', description: 'Grüner Tee' },
       ],
       player2: [
-        { img: 'images/glühwein.png', description: 'Glühwein' },
-        { img: 'images/grüner_tee.png', description: 'Grüner Tee' },
+        { img: 'images/gluehwein.png', description: 'Glühwein' },
+        { img: 'images/gruener_tee.png', description: 'Grüner Tee' },
         { img: 'images/gin.png', description: 'Gin' },
       ]
     },
     {
       player1: [
-        { img: 'images/holunderblütensaft.png', description: 'Holunderblütensaft' },
+        { img: 'images/holunderbluetensaft.png', description: 'Holunderblütensaft' },
       ],
       player2: [
         { img: 'images/heisse_schokolade.png', description: 'Heiße Schokolade' },
@@ -406,6 +406,23 @@
       player2: [
         { img: 'images/minztee.png', description: 'Minztee' },
         { img: 'images/moscow_mule.png', description: 'Moscow Mule' },
+      ]
+    },
+    {
+      player1: [
+        { img: 'images/nierentee.png', description: 'Nierentee' },
+      ],
+      player2: [
+        { img: 'images/negroni.png', description: 'Negroni' },
+      ]
+    },
+    {
+      player1: [
+        { img: 'images/orangensaft_frisch.png', description: 'Orangensaft, frisch gepresst' },
+      ],
+      player2: [
+        { img: 'images/orangensaft_frisch.png', description: 'Orangensaft, frisch gepresst' },
+        { img: 'images/ouzo.png', description: 'Ouzo' },
       ]
     },
 
@@ -715,12 +732,17 @@
 
   function shuffleArray(array) {
     const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+    let currentIndex = array.length;
+    while (currentIndex != 0) {
+      let randomIndex = Math.floor(Math.random() * currentIndex);
+      currentIndex--;
+
+      // And swap it with the current element.
+      [arr[currentIndex], arr[randomIndex]] = [
+        arr[randomIndex], arr[currentIndex]];
     }
     return arr;
-  }
+  }  
 
   initDefaults();
   initGame();
